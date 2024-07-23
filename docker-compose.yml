@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  softhsm-server:
+    image: vegardit/softhsm2-pkcs11-proxy:latest
+    hostname: softhsm-server
+    networks:
+      - softhsm-net
+    ports:
+      - "2345:2345/tcp"
+  softhsm-client:
+    build:
+      context: .
+      dockerfile: client.debian.Dockerfile
+    environment:
+      PKCS11_PROXY_SOCKET: "tls://softhsm-server:2345"
+      PKCS11_PROXY_TLS_PSK_FILE: "/opt/test.tls.psk"
+    depends_on:
+      - softhsm-server
+    networks:
+      - softhsm-net
+    stdin_open: true  # Tương đương với -i (interactive)
+    tty: true         # Tương đương với -t (pseudo-TTY)
+    command: [ "bash" ] # Hoặc shell khác nếu cần
+
+networks:
+  softhsm-net:
+    driver: bridge
